@@ -1,0 +1,147 @@
+[
+    {
+        "id": "7f0e4efff34ae739",
+        "type": "tab",
+        "label": "Flow 1",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "5fa050b8b02c7bd8",
+        "type": "serial-port",
+        "name": "Loradata",
+        "serialport": "COM3",
+        "serialbaud": "115200",
+        "databits": 8,
+        "parity": "none",
+        "stopbits": 1,
+        "waitfor": "",
+        "dtr": "none",
+        "rts": "none",
+        "cts": "none",
+        "dsr": "none",
+        "newline": "\\n",
+        "bin": "false",
+        "out": "char",
+        "addchar": "",
+        "responsetimeout": 10000
+    },
+    {
+        "id": "9818b7387f5921c9",
+        "type": "websocket-listener",
+        "path": "/ws/tracks",
+        "wholemsg": "true"
+    },
+    {
+        "id": "31532d0a304d72e0",
+        "type": "serial in",
+        "z": "7f0e4efff34ae739",
+        "name": "Lora",
+        "serial": "5fa050b8b02c7bd8",
+        "x": 70,
+        "y": 700,
+        "wires": [
+            [
+                "19a00473b87a0d49"
+            ]
+        ]
+    },
+    {
+        "id": "19a00473b87a0d49",
+        "type": "json",
+        "z": "7f0e4efff34ae739",
+        "name": "",
+        "property": "payload",
+        "action": "",
+        "pretty": false,
+        "x": 210,
+        "y": 700,
+        "wires": [
+            [
+                "513a4bf68c058ac0"
+            ]
+        ]
+    },
+    {
+        "id": "513a4bf68c058ac0",
+        "type": "function",
+        "z": "7f0e4efff34ae739",
+        "name": "Store Latest Track",
+        "func": "// Get current tracks\nlet tracks = global.get(\"tracks\") || {};\n\n// Current time\nconst now = new Date();\n\n// Update track\ntracks[msg.payload.trackId] = {\n    ...msg.payload,\n    timestamp: now.toISOString(),   // 2026-07-26T13:55:20.123Z\n    lastUpdated: Date.now()         // 1785074120123\n};\n\n// Save\nglobal.set(\"tracks\", tracks);\n\n// Send all tracks to websocket\nmsg.payload = Object.values(tracks);\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 410,
+        "y": 700,
+        "wires": [
+            [
+                "a2236cb91a7a578f"
+            ]
+        ]
+    },
+    {
+        "id": "f1cac8e035d6b9dd",
+        "type": "http in",
+        "z": "7f0e4efff34ae739",
+        "name": "Get Tracks",
+        "url": "/api/tracks",
+        "method": "get",
+        "upload": false,
+        "skipBodyParsing": false,
+        "swaggerDoc": "",
+        "x": 380,
+        "y": 600,
+        "wires": [
+            [
+                "513a4bf68c058ac0",
+                "942820f743441968"
+            ]
+        ]
+    },
+    {
+        "id": "942820f743441968",
+        "type": "function",
+        "z": "7f0e4efff34ae739",
+        "name": "Read Tracks",
+        "func": "const tracks = global.get(\"tracks\") || {};\nmsg.payload = Object.values(tracks);\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 670,
+        "y": 400,
+        "wires": [
+            [
+                "c214c569de24bf93"
+            ]
+        ]
+    },
+    {
+        "id": "c214c569de24bf93",
+        "type": "http response",
+        "z": "7f0e4efff34ae739",
+        "name": "tracks response",
+        "statusCode": "",
+        "headers": {},
+        "x": 860,
+        "y": 400,
+        "wires": []
+    },
+    {
+        "id": "a2236cb91a7a578f",
+        "type": "websocket out",
+        "z": "7f0e4efff34ae739",
+        "name": "tracks",
+        "server": "9818b7387f5921c9",
+        "client": "",
+        "x": 830,
+        "y": 700,
+        "wires": []
+    }
+]
